@@ -1,0 +1,73 @@
+---
+title: "Zadanie 1"
+author: "Szymon Janowski"
+date: "26 10 2020"
+output: html_document
+---
+
+## Wczytanie danych (adowanie bibliotek) z cachowaniem
+
+```{r loading_data, cache=TRUE, error=FALSE, warning=FALSE}
+library(EDAWR)
+library(dplyr)
+library(knitr)
+
+# Number of tuberculosis cases
+knitr::kable(head(tb))
+```
+
+## Prezentacja podsumowania danych w zbiorze
+
+```{r summary, error=FALSE, warning=FALSE}
+knitr::kable(summary(tb))
+```
+
+## Prezentacja liczy zachorowan z podzialem na plec
+
+```{r groupby, error=FALSE, warning=FALSE}
+df_gsex <- tb %>%
+  group_by(sex) %>%
+  summarise_at(vars(child, adult, elderly), funs(sum), na.rm=TRUE)
+df_gsex$sum <- rowSums(df_gsex[,c("child", "adult", "elderly")])
+knitr::kable(df_gsex[, c("sex","sum")])
+  
+```
+
+## Prezentacja dla dzieci, doroslych i osob starszych w kolejnych latach
+
+```{r groupby2, error=FALSE, warning=FALSE}
+df_gyear <- tb %>%
+  group_by(year) %>%
+  summarise_at(vars(child, adult, elderly), funs(sum), na.rm=TRUE)
+matplot(df_gyear$year, df_gyear[,c("child", "adult", "elderly")], type = c("b"), pch=1, col = 1:3, xlab="Number of cases", ylab="Year")
+legend("topleft", legend = cbind("child", "adult", "elderly"), col=1:3, pch=1)
+```
+
+## Prezentacja wykresow z poprzedniego punktu dla poszczególnych krajów
+
+```{r groupby3, error=FALSE, warning=FALSE}
+df_gcountry_year <- tb %>%
+  group_by(country, year) %>%
+  summarise_at(vars(child, adult, elderly), funs(sum), na.rm=TRUE)
+
+# All countries
+countries <- unique(df_gcountry_year$country)
+countries
+
+```
+```{r groupby4, error=FALSE, warning=FALSE}
+for(i in countries[1:3]){
+  df_temp <- df_gcountry_year %>%
+    filter(country == i)
+  matplot(df_temp$year, df_temp[,c("child", "adult", "elderly")], type = c("b"), pch=1, col = 1:3, xlab=sprintf("Number of cases for %s", i), ylab="Year")
+  legend("topleft", legend = cbind("child", "adult", "elderly"), col=1:3, pch=1)
+}
+```
+
+#### Uwaga kompilowane z użyciem polecenia
+Nie używanie przycisku *Knit* w RStudio pozwala na uniknicie bledów cache'owania.
+Renderowac raport można zpomoc ponizszej komendy.
+
+```{r rendering, eval=FALSE, error=FALSE, warning=FALSE}
+rmarkdown::render('zad_1/test_raport.Rmd', output_format = 'html_document')
+```
